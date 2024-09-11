@@ -2,34 +2,68 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>URL圧縮と短縮URL生成ツール</title>
+    <title>暗号化されたURL生成ツール</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
 </head>
 <body>
-    <h1>URL圧縮と短縮URL生成ツール</h1>
-    <input type="text" id="urlInput" placeholder="圧縮したいURLを入力してください" />
-    <button id="generateButton">短縮URL生成</button>
-    <h2>生成された短縮URL</h2>
-    <p id="shortUrl"></p>
+    <h1>暗号化されたURL生成ツール</h1>
+    <label for="urlInput">URLを入力してください:</label>
+    <input type="text" id="urlInput" placeholder="https://example.com"><br><br>
+
+    <input type="checkbox" id="passwordRequired"> パスワードが必要ですか？<br><br>
+
+    <div id="passwordSection" style="display:none;">
+        <label for="passwordInput">パスワードを作成してください:</label>
+        <input type="text" id="passwordInput" placeholder="パスワード">
+    </div><br>
+
+    <button id="generateButton">生成</button><br><br>
+    
+    <div id="result"></div>
 
     <script>
-        function compress(url) {
-            // URLをBase64で圧縮
-            return btoa(url);
-        }
-
-        function generateShortUrl(originalUrl) {
-            const compressedUrl = compress(originalUrl);
-            return `https://2.i-i.f5.si/${compressedUrl}`; // 指定されたドメインを使用
-        }
+        document.getElementById('passwordRequired').addEventListener('change', function() {
+            const passwordSection = document.getElementById('passwordSection');
+            if (this.checked) {
+                passwordSection.style.display = 'block';
+            } else {
+                passwordSection.style.display = 'none';
+            }
+        });
 
         document.getElementById('generateButton').addEventListener('click', function() {
-            const originalUrl = document.getElementById('urlInput').value;
-            if (originalUrl) {
-                const shortUrl = generateShortUrl(originalUrl);
-                document.getElementById('shortUrl').innerText = shortUrl;
-            } else {
-                alert('URLを入力してください！');
+            const url = document.getElementById('urlInput').value;
+            const passwordRequired = document.getElementById('passwordRequired').checked;
+            let password = null;
+
+            if (passwordRequired) {
+                password = document.getElementById('passwordInput').value;
             }
+
+            // AES-256での暗号化
+            const key = CryptoJS.lib.WordArray.random(32); // 自動生成キー
+            const encryptedUrl = CryptoJS.AES.encrypt(url, key).toString();
+            let encryptedPassword, base64Key;
+
+            if (password) {
+                encryptedPassword = CryptoJS.AES.encrypt(password, key).toString();
+            } else {
+                encryptedPassword = '';
+            }
+
+            base64Key = CryptoJS.enc.Base64.stringify(key);
+
+            // JSON生成
+            const json = {
+                u: encryptedUrl,
+                p: encryptedPassword,
+                k: base64Key
+            };
+            const base64Json = btoa(JSON.stringify(json)); // JSONをベース64化
+
+            // 最終結果
+            const resultUrl = `https://2.i-i.f5.si/${base64Json}`;
+            document.getElementById('result').innerText = `生成されたURL: ${resultUrl}`;
         });
     </script>
 </body>
