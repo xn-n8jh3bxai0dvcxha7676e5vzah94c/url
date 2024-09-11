@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>URL圧縮と短縮URL生成ツール</title>
+</head>
+<body>
+    <h1>URL圧縮と短縮URL生成ツール</h1>
+    <input type="text" id="urlInput" placeholder="圧縮したいURLを入力してください" />
+    <button id="generateButton">短縮URL生成</button>
+    <h2>生成された短縮URL</h2>
+    <p id="shortUrl"></p>
+
+    <script>
+        function compress(url) {
+            // URLをBase64で圧縮
+            return btoa(url);
+        }
+
+        function generateShortUrl(originalUrl) {
+            const compressedUrl = compress(originalUrl);
+            return `https://2.i-i.f5.si/${compressedUrl}`; // 指定されたドメインを使用
+        }
+
+        document.getElementById('generateButton').addEventListener('click', function() {
+            const originalUrl = document.getElementById('urlInput').value;
+            if (originalUrl) {
+                const shortUrl = generateShortUrl(originalUrl);
+                document.getElementById('shortUrl').innerText = shortUrl;
+            } else {
+                alert('URLを入力してください！');
+            }
+        });
+    </script>
+</body>
+</html>
