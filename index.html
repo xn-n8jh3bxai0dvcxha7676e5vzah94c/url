@@ -9,19 +9,51 @@
     <h1>暗号化されたURL生成ツール</h1>
     <label for="urlInput">URLを入力してください:</label>
     <input type="text" id="urlInput" placeholder="https://example.com"><br><br>
-
+    
     <input type="checkbox" id="passwordRequired"> パスワードが必要ですか？<br><br>
-
+    
     <div id="passwordSection" style="display:none;">
         <label for="passwordInput">パスワードを作成してください:</label>
         <input type="text" id="passwordInput" placeholder="パスワード">
     </div><br>
-
+    
     <button id="generateButton">生成</button><br><br>
     
     <div id="result"></div>
-
+    
     <script>
+        // Encryptorクラス
+        class Encryptor {
+            constructor(repeatCount) {
+                this.repeatCount = repeatCount; // 繰り返し回数
+            }
+
+            // 暗号化メソッド
+            encrypt(data) {
+                let data1 = data.slice(0, data.length / 2);
+                let data2 = data.slice(data.length / 2);
+
+                for (let i = 0; i < this.repeatCount; i++) {
+                    let newData1 = '';
+                    let newData2 = '';
+                    
+                    for (let j = 0; j < data1.length; j++) {
+                        if (data1[j] === '0') {
+                            newData1 += (data2[j] === '1') ? '0' : '1'; // 簡単なビット逆転処理
+                        } else {
+                            newData1 += data1[j];
+                        }
+                        newData2 += data2[j]; // データ2をそのままコピー
+                    }
+
+                    data1 = newData1;
+                    data2 = newData2;
+                }
+
+                return data1 + data2; // 最終的なデータを結合して返す
+            }
+        }
+
         document.getElementById('passwordRequired').addEventListener('change', function() {
             const passwordSection = document.getElementById('passwordSection');
             if (this.checked) {
@@ -40,29 +72,17 @@
                 password = document.getElementById('passwordInput').value;
             }
 
-            // AES-256での暗号化
-            const key = CryptoJS.lib.WordArray.random(32); // 自動生成キー
-            const encryptedUrl = CryptoJS.AES.encrypt(url, key).toString();
-            let encryptedPassword, base64Key;
+            // Encryptorのインスタンスを作成
+            const encryptor = new Encryptor(5); // 繰り返し回数を指定
+            const encryptedUrl = encryptor.encrypt(url);
+            let encryptedPassword = '';
 
             if (password) {
-                encryptedPassword = CryptoJS.AES.encrypt(password, key).toString();
-            } else {
-                encryptedPassword = '';
+                encryptedPassword = encryptor.encrypt(password);
             }
 
-            base64Key = CryptoJS.enc.Base64.stringify(key);
-
-            // JSON生成
-            const json = {
-                u: encryptedUrl,
-                p: encryptedPassword,
-                k: base64Key
-            };
-            const base64Json = btoa(JSON.stringify(json)); // JSONをベース64化
-
             // 最終結果
-            const resultUrl = `https://2.i-i.f5.si/${base64Json}`;
+            const resultUrl = `https://2.i-i.f5.si/${btoa(JSON.stringify({ u: encryptedUrl, p: encryptedPassword }))}`;
             document.getElementById('result').innerText = `生成されたURL: ${resultUrl}`;
         });
     </script>
